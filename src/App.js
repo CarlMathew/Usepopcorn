@@ -1,6 +1,7 @@
 import "./App.css";
 import Navbar from "./Navbar";
 import Body from "./Body";
+import { useEffect, useState } from "react";
 
 const tempMovieData = [
   {
@@ -50,6 +51,20 @@ const tempWatchedData = [
 ];
 
 function App() {
+  const [tempMovieData, setTempMovieData] = useState([]);
+  const apiKey = "c4323a11";
+  const url = `http://www.omdbapi.com/?apikey=${apiKey}&s=green book`;
+  useEffect(() => {
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        const updated_data = data.Search.filter(
+          (movie) => movie.Poster !== "N/A"
+        );
+        console.log(updated_data);
+        setTempMovieData(updated_data);
+      });
+  }, []);
   return (
     <div className="h-screen bg-gray-900 text-white">
       <Navbar>
