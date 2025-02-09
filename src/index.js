@@ -7,7 +7,7 @@ import Star from "./StarRating";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    {/* <App /> */}
-    <Star maximum="10" star_size={40} />
+    <App />
+    {/* <Star maximum="10" star_size={40} /> */}
   </React.StrictMode>
 );

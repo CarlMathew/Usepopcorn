@@ -1,15 +1,15 @@
 import { useState } from "react";
 
-function Body({ height, tempMovieData, tempWatchedData }) {
+function Body({ height, tempMovieData, tempWatchedData, isLoading }) {
   return (
     <div className={`flex flex-row justify-center items-center h-[90%] gap-10`}>
-      <ListBox tempMovieData={tempMovieData} />
+      <ListBox tempMovieData={tempMovieData} isLoading={isLoading} />
       <WatchedBox tempWatchedData={tempWatchedData} />
     </div>
   );
 }
 
-function ListBox({ tempMovieData }) {
+function ListBox({ tempMovieData, isLoading }) {
   const [show, setShow] = useState(true);
   return (
     <div className="h-[80%] bg-gray-800 rounded w-[25%] shadow-2xl p-2 overflow-x-auto">
@@ -21,7 +21,12 @@ function ListBox({ tempMovieData }) {
           {show ? "-" : "+"}
         </button>
       </div>
-      {show && <Movies tempMovieData={tempMovieData} />}
+      {show &&
+        (isLoading ? (
+          <div className="w-full text-center font-bold mt-5">Loading...</div>
+        ) : (
+          <Movies tempMovieData={tempMovieData} />
+        ))}
     </div>
   );
 }

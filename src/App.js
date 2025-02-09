@@ -3,29 +3,29 @@ import Navbar from "./Navbar";
 import Body from "./Body";
 import { useEffect, useState } from "react";
 
-const tempMovieData = [
-  {
-    imdbID: "tt1375666",
-    Title: "Inception",
-    Year: "2010",
-    Poster:
-      "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",
-  },
-  {
-    imdbID: "tt0133093",
-    Title: "The Matrix",
-    Year: "1999",
-    Poster:
-      "https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg",
-  },
-  {
-    imdbID: "tt6751668",
-    Title: "Parasite",
-    Year: "2019",
-    Poster:
-      "https://m.media-amazon.com/images/M/MV5BYWZjMjk3ZTItODQ2ZC00NTY5LWE0ZDYtZTI3MjcwN2Q5NTVkXkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_SX300.jpg",
-  },
-];
+// const tempMovieData = [
+//   {
+//     imdbID: "tt1375666",
+//     Title: "Inception",
+//     Year: "2010",
+//     Poster:
+//       "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",
+//   },
+//   {
+//     imdbID: "tt0133093",
+//     Title: "The Matrix",
+//     Year: "1999",
+//     Poster:
+//       "https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg",
+//   },
+//   {
+//     imdbID: "tt6751668",
+//     Title: "Parasite",
+//     Year: "2019",
+//     Poster:
+//       "https://m.media-amazon.com/images/M/MV5BYWZjMjk3ZTItODQ2ZC00NTY5LWE0ZDYtZTI3MjcwN2Q5NTVkXkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_SX300.jpg",
+//   },
+// ];
 
 const tempWatchedData = [
   {
@@ -52,24 +52,33 @@ const tempWatchedData = [
 
 function App() {
   const [tempMovieData, setTempMovieData] = useState([]);
+  const [searchedMovie, setSearchedMovie] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const apiKey = "c4323a11";
-  const url = `http://www.omdbapi.com/?apikey=${apiKey}&s=green book`;
   useEffect(() => {
-    fetch(url)
-      .then((res) => res.json())
-      .then((data) => {
-        const updated_data = data.Search.filter(
-          (movie) => movie.Poster !== "N/A"
-        );
-        console.log(updated_data);
-        setTempMovieData(updated_data);
-      });
+    async function fetchAPI() {
+      setIsLoading(true);
+      const res = await fetch(
+        `http://www.omdbapi.com/?apikey=${apiKey}&s=green book`
+      );
+      const data = await res.json();
+      const updated_data = data.Search.filter(
+        (movie) => movie.Poster !== "N/A"
+      );
+      setTempMovieData(updated_data);
+      setIsLoading(false);
+    }
+    fetchAPI();
   }, []);
   return (
     <div className="h-screen bg-gray-900 text-white">
       <Navbar>
         <Logo />
-        <Search />
+        <Search
+          setSearchedMovie={setSearchedMovie}
+          searchedMovie={searchedMovie}
+          setTempMovieData={setTempMovieData}
+        />
         <NumResults tempMovieData={tempMovieData} />{" "}
       </Navbar>
       <Body
@@ -144,10 +153,11 @@ function Logo() {
   );
 }
 
-function Search() {
+function Search({ searchedMovie, setSearchedMovie, setTempMovieData }) {
   return (
     <div className="flex items-center justify-center w-2/6">
       <input
+        value={searchedMovie}
         className="w-full rounded bg-violet-700 opacity-2 justify-self-center h-full px-4 focus:outline-none"
         placeholder="Search for movies..."
       />
