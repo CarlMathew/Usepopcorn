@@ -1,15 +1,19 @@
 import { useState } from "react";
 
-function Body({ height, tempMovieData, tempWatchedData, isLoading }) {
+function Body({ tempMovieData, tempWatchedData, isLoading, error }) {
   return (
     <div className={`flex flex-row justify-center items-center h-[90%] gap-10`}>
-      <ListBox tempMovieData={tempMovieData} isLoading={isLoading} />
+      <ListBox
+        tempMovieData={tempMovieData}
+        isLoading={isLoading}
+        error={error}
+      />
       <WatchedBox tempWatchedData={tempWatchedData} />
     </div>
   );
 }
 
-function ListBox({ tempMovieData, isLoading }) {
+function ListBox({ tempMovieData, isLoading, error }) {
   const [show, setShow] = useState(true);
   return (
     <div className="h-[80%] bg-gray-800 rounded w-[25%] shadow-2xl p-2 overflow-x-auto">
@@ -23,7 +27,9 @@ function ListBox({ tempMovieData, isLoading }) {
       </div>
       {show &&
         (isLoading ? (
-          <div className="w-full text-center font-bold mt-5">Loading...</div>
+          <div className="w-full text-center font-bold mt-5">
+            {error ? error : "Loading..."}
+          </div>
         ) : (
           <Movies tempMovieData={tempMovieData} />
         ))}

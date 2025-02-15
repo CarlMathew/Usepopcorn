@@ -54,22 +54,42 @@ function App() {
   const [tempMovieData, setTempMovieData] = useState([]);
   const [searchedMovie, setSearchedMovie] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const apiKey = "c4323a11";
+
   useEffect(() => {
     async function fetchAPI() {
-      setIsLoading(true);
-      const res = await fetch(
-        `http://www.omdbapi.com/?apikey=${apiKey}&s=green book`
-      );
-      const data = await res.json();
-      const updated_data = data.Search.filter(
-        (movie) => movie.Poster !== "N/A"
-      );
-      setTempMovieData(updated_data);
-      setIsLoading(false);
+      try {
+        setIsLoading(true);
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${apiKey}&s=${searchedMovie}`
+        );
+
+        if (!res.ok) throw new Error("Something went wrong!");
+
+        const data = await res.json();
+        if (!searchedMovie.length) {
+          setTempMovieData([]);
+          setError("Please Search Something!");
+        } else if (data.Search === undefined) {
+          setError("No Data Found");
+          console.log("there is an error");
+        } else {
+          const updated_data = data.Search.filter(
+            (movie) => movie.Poster !== "N/A"
+          );
+          setTempMovieData(updated_data);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error(err);
+
+        setError("No network. Please Check your network!");
+      }
     }
     fetchAPI();
-  }, []);
+  }, [searchedMovie]);
+
   return (
     <div className="h-screen bg-gray-900 text-white">
       <Navbar>
@@ -85,6 +105,8 @@ function App() {
         height={"90%"}
         tempMovieData={tempMovieData}
         tempWatchedData={tempWatchedData}
+        isLoading={isLoading}
+        error={error}
       />
     </div>
   );
@@ -160,6 +182,9 @@ function Search({ searchedMovie, setSearchedMovie, setTempMovieData }) {
         value={searchedMovie}
         className="w-full rounded bg-violet-700 opacity-2 justify-self-center h-full px-4 focus:outline-none"
         placeholder="Search for movies..."
+        onChange={(e) => {
+          setSearchedMovie(e.target.value);
+        }}
       />
     </div>
   );
