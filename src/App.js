@@ -78,6 +78,7 @@ function App() {
           const updated_data = data.Search.filter(
             (movie) => movie.Poster !== "N/A"
           );
+          console.log(updated_data);
           setTempMovieData(updated_data);
           setIsLoading(false);
         }

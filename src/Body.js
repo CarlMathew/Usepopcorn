@@ -1,19 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function Body({ tempMovieData, tempWatchedData, isLoading, error }) {
+  const [selectedID, setSelectedID] = useState(null);
   return (
     <div className={`flex flex-row justify-center items-center h-[90%] gap-10`}>
       <ListBox
         tempMovieData={tempMovieData}
         isLoading={isLoading}
         error={error}
+        setSelectedID={setSelectedID}
       />
-      <WatchedBox tempWatchedData={tempWatchedData} />
+      {!selectedID ? (
+        <WatchedBox tempWatchedData={tempWatchedData} />
+      ) : (
+        <MoviesInfo
+          tempMovieData={tempMovieData}
+          selectedID={selectedID}
+          setSelectedID={setSelectedID}
+        />
+      )}
     </div>
   );
 }
 
-function ListBox({ tempMovieData, isLoading, error }) {
+function ListBox({ tempMovieData, isLoading, error, setSelectedID }) {
   const [show, setShow] = useState(true);
   return (
     <div className="h-[80%] bg-gray-800 rounded w-[25%] shadow-2xl p-2 overflow-x-auto">
@@ -31,17 +41,21 @@ function ListBox({ tempMovieData, isLoading, error }) {
             {error ? error : "Loading..."}
           </div>
         ) : (
-          <Movies tempMovieData={tempMovieData} />
+          <Movies tempMovieData={tempMovieData} setSelectedID={setSelectedID} />
         ))}
     </div>
   );
 }
 
-function Movies({ tempMovieData }) {
+function Movies({ tempMovieData, setSelectedID }) {
   return (
     <div className="flex flex-col gap-8 flex-shrink-0 mt-4 px-4">
       {tempMovieData.map((movies) => (
-        <div className="flex flex-row gap-5">
+        <div
+          className="flex flex-row gap-5 cursor-pointer transition-all duration-100 hover:scale-110 active:scale-90 hover:bg-slate-700"
+          id={movies.imdbID}
+          onClick={(e) => setSelectedID(e.currentTarget.id)}
+        >
           <img src={movies.Poster} alt={movies.Title} width={70} />
           <div className="mt-4">
             <h1 className="">{movies.Title}</h1>
@@ -392,6 +406,91 @@ function Statistics({ tempWatchedData }) {
           />
         </svg>
         <h1 className="self-center">{avgRuntime} min</h1>
+      </div>
+    </div>
+  );
+}
+
+function MoviesInfo({ tempMovieData, selectedID, setSelectedID }) {
+  const [movieDetails, setMovieDetails] = useState({});
+  const movie = tempMovieData.filter((movie) => movie.imdbID === selectedID);
+  const current_movie = movie[0];
+  const apiKey = "c4323a11";
+
+  useEffect(() => {
+    async function getMovieDetails() {
+      const res = await fetch(
+        `http://www.omdbapi.com/?apikey=${apiKey}&i=${selectedID}`
+      );
+      const data = await res.json();
+      console.log(data);
+      setMovieDetails(data);
+    }
+    getMovieDetails();
+  }, [selectedID]);
+
+  if (!current_movie) return <div>No data found</div>;
+
+  return (
+    <div className="h-[80%] w-[25%]">
+      <div className="bg-slate-800 flex p-4 gap-4 w-full relative pb-10">
+        <button
+          className="absolute top-0 -left-2 bg-white rounded-full text-black font-bold"
+          onClick={() => setSelectedID(null)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            class="bi bi-arrow-left"
+            viewBox="0 0 16 16"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"
+            />
+          </svg>
+        </button>
+        <img
+          src={movieDetails.Poster}
+          alt={movieDetails.Title}
+          width={120}
+          height={120}
+        />
+        <div>
+          <h1 className="text-2xl font-semibold">{movieDetails.Title}</h1>
+          <p className="text-sm mt-2 text-slate-400 italic flex items-center">
+            <span>{movieDetails.Released}</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              class="bi bi-dot"
+              viewBox="0 0 16 16"
+            >
+              <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3" />
+            </svg>
+            <span>{movieDetails.Runtime}</span>
+          </p>
+          <h1 className="text-sm mt-1 text-slate-400 italic flex items-center">
+            {movieDetails.Genre}
+          </h1>
+          <div className="flex gap-1 items-center text-sm mt-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              class="bi bi-stars"
+              viewBox="0 0 16 16"
+            >
+              <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.73 1.73 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.73 1.73 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.73 1.73 0 0 0 3.407 2.31zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z" />
+            </svg>
+            <span>{movieDetails.imdbRating} IMDb Rating</span>
+          </div>
+        </div>
       </div>
     </div>
   );
