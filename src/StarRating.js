@@ -6,12 +6,18 @@ StarRating.propTypes = {
   star_size: PropTypes.string,
 };
 
-export default function StarRating({ maximum = 5, star_size = 20 }) {
-  const [currentRating, setCurrentRating] = useState(0);
-  const [tempRating, setTempRating] = useState(0);
+export default function StarRating({
+  currentRating,
+  setCurrentRating,
+  tempRating,
+  setTempRating,
+  maximum = 5,
+  star_size = 20,
+}) {
   const [stars, onStars] = useState(false);
+
   return (
-    <div className="flex gap-2 items-start ">
+    <div className="flex gap-2 items-center ">
       <div className="flex gap-2">
         {Array.from({ length: maximum }, (_, i) => (
           <Star

@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
-
-function Body({ tempMovieData, tempWatchedData, isLoading, error }) {
+import StarRating from "./StarRating";
+function Body({
+  tempMovieData,
+  tempWatchedData,
+  setTempWatchedData,
+  isLoading,
+  error,
+}) {
   const [selectedID, setSelectedID] = useState(null);
   return (
-    <div className={`flex flex-row justify-center items-center h-[90%] gap-10`}>
+    <div
+      className={`flex flex-row justify-center items-center h-[90%] gap-10 overflow-x-auto`}
+    >
       <ListBox
         tempMovieData={tempMovieData}
         isLoading={isLoading}
@@ -14,6 +22,8 @@ function Body({ tempMovieData, tempWatchedData, isLoading, error }) {
         <WatchedBox tempWatchedData={tempWatchedData} />
       ) : (
         <MoviesInfo
+          tempWatchedData={tempWatchedData}
+          setTempWatchedData={setTempWatchedData}
           tempMovieData={tempMovieData}
           selectedID={selectedID}
           setSelectedID={setSelectedID}
@@ -360,7 +370,7 @@ function Statistics({ tempWatchedData }) {
             d="M27.287 34.627c-.404 0-.806-.124-1.152-.371L18 28.422l-8.135 5.834a1.97 1.97 0 0 1-2.312-.008a1.97 1.97 0 0 1-.721-2.194l3.034-9.792l-8.062-5.681a1.98 1.98 0 0 1-.708-2.203a1.98 1.98 0 0 1 1.866-1.363L12.947 13l3.179-9.549a1.976 1.976 0 0 1 3.749 0L23 13l10.036.015a1.975 1.975 0 0 1 1.159 3.566l-8.062 5.681l3.034 9.792a1.97 1.97 0 0 1-.72 2.194a1.96 1.96 0 0 1-1.16.379"
           />
         </svg>
-        <h1 className="self-center">{avgImdbRating}</h1>
+        <h1 className="self-center">{avgImdbRating.toFixed(2) || 0}</h1>
       </div>
       <div className="flex gap-1">
         <svg
@@ -378,7 +388,7 @@ function Statistics({ tempWatchedData }) {
             d="M9.783 2.181c1.023 1.413 2.446 4.917 1.717 5.447c-.728.531-3.607-1.91-4.63-3.323s-.935-2.668-.131-3.254c.804-.587 2.02-.282 3.044 1.13m19.348 2.124C28.109 5.718 25.23 8.16 24.5 7.627c-.729-.53.695-4.033 1.719-5.445C27.242.768 28.457.463 29.262 1.051c.803.586.89 1.841-.131 3.254M16.625 33.291c-.001-1.746.898-5.421 1.801-5.421c.897 0 1.798 3.675 1.797 5.42c0 1.747-.804 2.712-1.8 2.71c-.994.002-1.798-.962-1.798-2.709m16.179-9.262c-1.655-.539-4.858-2.533-4.579-3.395c.277-.858 4.037-.581 5.69-.041c1.655.54 2.321 1.605 2.013 2.556c-.308.95-1.469 1.42-3.124.88M2.083 20.594c1.655-.54 5.414-.817 5.694.044c.276.857-2.928 2.854-4.581 3.392c-1.654.54-2.818.07-3.123-.88c-.308-.95.354-2.015 2.01-2.556"
           />
         </svg>
-        <h1 className="self-center">{avgUserRating}</h1>
+        <h1 className="self-center">{avgUserRating.toFixed(2) || 0}</h1>
       </div>
       <div className="flex gap-1">
         <svg
@@ -405,93 +415,184 @@ function Statistics({ tempWatchedData }) {
             d="M8.915 13.839a1 1 0 0 1 1.325-1.288l8.154 3.51a1 1 0 0 1-.791 1.837l-8.154-3.51a1 1 0 0 1-.534-.549"
           />
         </svg>
-        <h1 className="self-center">{avgRuntime} min</h1>
+        <h1 className="self-center">{avgRuntime.toFixed(1) || 0} min</h1>
       </div>
     </div>
   );
 }
 
-function MoviesInfo({ tempMovieData, selectedID, setSelectedID }) {
+function MoviesInfo({
+  tempWatchedData,
+  setTempWatchedData,
+  tempMovieData,
+  selectedID,
+  setSelectedID,
+}) {
   const [movieDetails, setMovieDetails] = useState({});
   const movie = tempMovieData.filter((movie) => movie.imdbID === selectedID);
   const current_movie = movie[0];
   const apiKey = "c4323a11";
+  const [currentRating, setCurrentRating] = useState(0);
+  const [tempRating, setTempRating] = useState(0);
+  const [loading, isLoading] = useState(true);
+  // {
+  //     imdbID: "tt1375666",
+  //     Title: "Inception",
+  //     Year: "2010",
+  //     Poster:
+  //       "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",
+  //     runtime: 148,
+  //     imdbRating: 8.8,
+  //     userRating: 10,
+  //   },
+  function addTempWatchMovie() {
+    const data = {
+      imdbID: movieDetails.imdbID,
+      Title: movieDetails.Title,
+      Year: movieDetails.Year,
+      Poster: movieDetails.Poster,
+      runtime: parseInt(movieDetails.Runtime),
+      imdbRating: parseFloat(movieDetails.imdbRating),
+      userRating: parseInt(currentRating),
+    };
+
+    const exist = tempWatchedData.filter(
+      (movie) => movie.Title === movieDetails.Title
+    );
+
+    if (exist.length == 0) {
+      const tempMovieData = [...tempWatchedData, data];
+
+      setTempWatchedData(tempMovieData);
+      setSelectedID(false);
+    } else if (exist.length > 0) {
+      const updateData = tempWatchedData.map((movie) =>
+        movie.imdbID === movieDetails.imdbID
+          ? { ...movie, userRating: parseInt(currentRating) }
+          : movie
+      );
+
+      console.log("Updated");
+      console.log(updateData);
+      setCurrentRating(0);
+      setTempWatchedData(updateData);
+      setSelectedID(false);
+    }
+  }
 
   useEffect(() => {
     async function getMovieDetails() {
+      isLoading(true);
       const res = await fetch(
         `http://www.omdbapi.com/?apikey=${apiKey}&i=${selectedID}`
       );
       const data = await res.json();
-      console.log(data);
+
       setMovieDetails(data);
+      isLoading(false);
     }
     getMovieDetails();
   }, [selectedID]);
 
-  if (!current_movie) return <div>No data found</div>;
+  if (!current_movie) setSelectedID(null);
 
   return (
     <div className="h-[80%] w-[25%]">
-      <div className="bg-slate-800 flex p-4 gap-4 w-full relative pb-10">
-        <button
-          className="absolute top-0 -left-2 bg-white rounded-full text-black font-bold"
-          onClick={() => setSelectedID(null)}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            fill="currentColor"
-            class="bi bi-arrow-left"
-            viewBox="0 0 16 16"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"
-            />
-          </svg>
-        </button>
-        <img
-          src={movieDetails.Poster}
-          alt={movieDetails.Title}
-          width={120}
-          height={120}
-        />
-        <div>
-          <h1 className="text-2xl font-semibold">{movieDetails.Title}</h1>
-          <p className="text-sm mt-2 text-slate-400 italic flex items-center">
-            <span>{movieDetails.Released}</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="currentColor"
-              class="bi bi-dot"
-              viewBox="0 0 16 16"
-            >
-              <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3" />
-            </svg>
-            <span>{movieDetails.Runtime}</span>
-          </p>
-          <h1 className="text-sm mt-1 text-slate-400 italic flex items-center">
-            {movieDetails.Genre}
-          </h1>
-          <div className="flex gap-1 items-center text-sm mt-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="currentColor"
-              class="bi bi-stars"
-              viewBox="0 0 16 16"
-            >
-              <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.73 1.73 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.73 1.73 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.73 1.73 0 0 0 3.407 2.31zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z" />
-            </svg>
-            <span>{movieDetails.imdbRating} IMDb Rating</span>
-          </div>
+      {loading ? (
+        <div className=" w-full h-full flex flex-col justify-center items-center">
+          <span class="loader"></span>
+          <h1>Loading Please Wait...</h1>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="bg-slate-800 flex p-4 gap-4 w-full relative pb-10">
+            <button
+              className="absolute top-0 -left-2 bg-white rounded-full text-black font-bold"
+              onClick={() => setSelectedID(null)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                class="bi bi-arrow-left"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"
+                />
+              </svg>
+            </button>
+            <img
+              src={movieDetails.Poster}
+              alt={movieDetails.Title}
+              width={120}
+              height={120}
+            />
+            <div>
+              <h1 className="text-2xl font-semibold">{movieDetails.Title}</h1>
+              <p className="text-sm mt-2 text-slate-400 italic flex items-center">
+                <span>{movieDetails.Released}</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  class="bi bi-dot"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3" />
+                </svg>
+                <span>{movieDetails.Runtime}</span>
+              </p>
+              <h1 className="text-sm mt-1 text-slate-400 italic flex items-center">
+                {movieDetails.Genre}
+              </h1>
+              <div className="flex gap-1 items-center text-sm mt-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  class="bi bi-stars"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.73 1.73 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.73 1.73 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.73 1.73 0 0 0 3.407 2.31zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z" />
+                </svg>
+                <span>{movieDetails.imdbRating} IMDb Rating</span>
+              </div>
+            </div>
+          </div>
+          <div className="bg-slate-800 flex px-4 gap-4 w-full relative">
+            <div className="bg-slate-700 w-full py-4 px-2 justify-center flex">
+              <StarRating
+                currentRating={currentRating}
+                setCurrentRating={setCurrentRating}
+                tempRating={tempRating}
+                setTempRating={setTempRating}
+                maximum="10"
+                star_size={20}
+              />
+            </div>
+          </div>
+          <div className="bg-slate-800 w-full relative px-4 pt-4 text-slate-500 flex justify-center">
+            <button
+              className="bg-sky-400 w-4/6 text-white font-bold py-1 rounded-lg shadow shadow-blue-400 
+                                transition-all duration-300 hover:scale-110 hover:-translate-y-2 active:scale-90 active:translate-y-0"
+              onClick={addTempWatchMovie}
+            >
+              + Add To Watch List
+            </button>
+          </div>
+          <div className="bg-slate-800 px-4 pt-4 gap-4 w-full relative pb-10 text-slate-500">
+            <h1 className="italic">{movieDetails.Plot}</h1>
+            <hr className="mt-2" />
+            <p className="mt-2 text-sm">Starring {movieDetails.Actors}</p>
+            <p className="mt-2 text-sm">Directed by {movieDetails.Director}</p>
+          </div>
+        </>
+      )}
     </div>
   );
 }
