@@ -65,7 +65,7 @@ function App() {
       try {
         setIsLoading(true);
         const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${apiKey}&s=${searchedMovie}`,
+          `https://www.omdbapi.com/?apikey=${apiKey}&s=${searchedMovie}`,
           { signal: controller.signal }
         );
 
