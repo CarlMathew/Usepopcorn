@@ -54,10 +54,10 @@ function Star({ id, onRate, full, setTempRating, stars, onStars, star_size }) {
       onClick={(e) => {
         onRate(e.currentTarget.id);
         setTempRating(e.currentTarget.id);
+
         onStars(true);
       }}
       onMouseEnter={(e) => {
-        onRate(e.currentTarget.id);
         setTempRating(e.currentTarget.id);
         onStars(false);
       }}

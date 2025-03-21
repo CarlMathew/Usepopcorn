@@ -59,11 +59,14 @@ function App() {
   const apiKey = "c4323a11";
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function fetchAPI() {
       try {
         setIsLoading(true);
         const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${apiKey}&s=${searchedMovie}`
+          `http://www.omdbapi.com/?apikey=${apiKey}&s=${searchedMovie}`,
+          { signal: controller.signal }
         );
 
         if (!res.ok) throw new Error("Something went wrong!");
@@ -90,6 +93,10 @@ function App() {
       }
     }
     fetchAPI();
+
+    return function () {
+      controller.abort();
+    };
   }, [searchedMovie]);
 
   return (

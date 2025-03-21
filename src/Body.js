@@ -10,7 +10,7 @@ function Body({
   const [selectedID, setSelectedID] = useState(null);
   return (
     <div
-      className={`flex flex-row justify-center items-center h-[90%] gap-10 overflow-x-auto`}
+      className={`flex flex-col md:flex-row justify-center items-center h-[90%] gap-10 overflow-x-auto`}
     >
       <ListBox
         tempMovieData={tempMovieData}
@@ -19,7 +19,10 @@ function Body({
         setSelectedID={setSelectedID}
       />
       {!selectedID ? (
-        <WatchedBox tempWatchedData={tempWatchedData} />
+        <WatchedBox
+          tempWatchedData={tempWatchedData}
+          setTempWatchedData={setTempWatchedData}
+        />
       ) : (
         <MoviesInfo
           tempWatchedData={tempWatchedData}
@@ -36,7 +39,7 @@ function Body({
 function ListBox({ tempMovieData, isLoading, error, setSelectedID }) {
   const [show, setShow] = useState(true);
   return (
-    <div className="h-[80%] bg-gray-800 rounded w-[25%] shadow-2xl p-2 overflow-x-auto">
+    <div className="h-auto md:h-[80%] bg-gray-800 rounded w-[90%] md:w-[25%] shadow-2xl p-2 md:overflow-x-auto">
       <div className="flex justify-end">
         <button
           className="font-bold bg-gray-950 py-[5px] px-[10px] rounded-full"
@@ -184,11 +187,11 @@ function Movies({ tempMovieData, setSelectedID }) {
   );
 }
 
-function WatchedBox({ tempWatchedData }) {
+function WatchedBox({ tempWatchedData, setTempWatchedData }) {
   const [showMoviesWatched, setShowMoviesWatched] = useState(true);
 
   return (
-    <div className="h-[80%] bg-gray-800 rounded w-[25%] shadow-2xl">
+    <div className="h-auto md:h-[80%] bg-gray-800 rounded w-[90%] md:w-[25%] shadow-2xl">
       <div className="bg-gray-700 p-4 font-bold">
         <TitleWatchedBox
           showMoviesWatched={showMoviesWatched}
@@ -199,6 +202,7 @@ function WatchedBox({ tempWatchedData }) {
       <WatchedMovies
         tempWatchedData={tempWatchedData}
         showMoviesWatched={showMoviesWatched}
+        setTempWatchedData={setTempWatchedData}
       />
     </div>
   );
@@ -472,12 +476,11 @@ function MoviesInfo({
           : movie
       );
 
-      console.log("Updated");
-      console.log(updateData);
       setCurrentRating(0);
       setTempWatchedData(updateData);
       setSelectedID(false);
     }
+    document.title = "UsePopcorn";
   }
 
   useEffect(() => {
@@ -487,6 +490,10 @@ function MoviesInfo({
         `http://www.omdbapi.com/?apikey=${apiKey}&i=${selectedID}`
       );
       const data = await res.json();
+
+      const name = data.Title;
+
+      document.title = `Movie | ${name}`;
 
       setMovieDetails(data);
       isLoading(false);
@@ -508,7 +515,10 @@ function MoviesInfo({
           <div className="bg-slate-800 flex p-4 gap-4 w-full relative pb-10">
             <button
               className="absolute top-0 -left-2 bg-white rounded-full text-black font-bold"
-              onClick={() => setSelectedID(null)}
+              onClick={() => {
+                document.title = "Usepopcorn";
+                setSelectedID(null);
+              }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -577,13 +587,17 @@ function MoviesInfo({
             </div>
           </div>
           <div className="bg-slate-800 w-full relative px-4 pt-4 text-slate-500 flex justify-center">
-            <button
-              className="bg-sky-400 w-4/6 text-white font-bold py-1 rounded-lg shadow shadow-blue-400 
+            {currentRating > 0 ? (
+              <button
+                className="bg-sky-400 w-4/6 text-white font-bold py-1 rounded-lg shadow shadow-blue-400 
                                 transition-all duration-300 hover:scale-110 hover:-translate-y-2 active:scale-90 active:translate-y-0"
-              onClick={addTempWatchMovie}
-            >
-              + Add To Watch List
-            </button>
+                onClick={addTempWatchMovie}
+              >
+                + Add To Watch List
+              </button>
+            ) : (
+              ""
+            )}
           </div>
           <div className="bg-slate-800 px-4 pt-4 gap-4 w-full relative pb-10 text-slate-500">
             <h1 className="italic">{movieDetails.Plot}</h1>
@@ -597,13 +611,41 @@ function MoviesInfo({
   );
 }
 
-function WatchedMovies({ tempWatchedData, showMoviesWatched }) {
+function WatchedMovies({
+  tempWatchedData,
+  showMoviesWatched,
+  setTempWatchedData,
+}) {
+  function RemoveTempMovies(e) {
+    console.log(e.currentTarget.imdbID);
+    const currentMovies = tempWatchedData.filter(
+      (movies) => movies.imdbID !== e.currentTarget.id
+    );
+
+    setTempWatchedData(currentMovies);
+  }
   return (
     <>
       {showMoviesWatched && (
-        <ul className="flex flex-col p-5 gap-10 h-[80%] overflow-y-auto">
+        <ul className="flex flex-col p-5 gap-10 h-auto md:h-[80%] overflow-y-auto">
           {tempWatchedData.map((movie) => (
-            <li className="flex gap-4 flex-shrink-0">
+            <li className="flex gap-4 flex-shrink-0 relative">
+              <button
+                className="absolute right-0 p-1 bg-red-400 rounded"
+                id={movie.imdbID}
+                onClick={RemoveTempMovies}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  fill="currentColor"
+                  class="bi bi-trash2"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M14 3a.7.7 0 0 1-.037.225l-1.684 10.104A2 2 0 0 1 10.305 15H5.694a2 2 0 0 1-1.973-1.671L2.037 3.225A.7.7 0 0 1 2 3c0-1.105 2.686-2 6-2s6 .895 6 2M3.215 4.207l1.493 8.957a1 1 0 0 0 .986.836h4.612a1 1 0 0 0 .986-.836l1.493-8.957C11.69 4.689 9.954 5 8 5s-3.69-.311-4.785-.793" />
+                </svg>
+              </button>
               <img src={movie.Poster} width={70} alt={movie.Title} />
               <div>
                 <h1 className="font-bold mt-4">{movie.Title}</h1>
