@@ -464,7 +464,7 @@ function MoviesInfo({
       (movie) => movie.Title === movieDetails.Title
     );
 
-    if (exist.length == 0) {
+    if (exist.length === 0) {
       const tempMovieData = [...tempWatchedData, data];
 
       setTempWatchedData(tempMovieData);
